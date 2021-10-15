@@ -1,6 +1,6 @@
 GL_PKGS=glfw3 glew
 CFLAGS=-Wall -Wextra
-FILES=main.cpp renderer/setup.c
+FILES=main.cpp renderer/setup.c renderer/camera/camera.c
 
 run: main.o
 	./main.o

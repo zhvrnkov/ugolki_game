@@ -1,10 +1,10 @@
 #include <glm/glm.hpp>
 #include <cmath>
 #include "renderer/renderer.h"
+#include "renderer/camera/camera.h"
 
 using namespace glm;
 using namespace std;
-
 
 static void scrollCallback(double xoffset, double yoffset) {
   cout << "scrollCallback" << endl;
@@ -22,6 +22,9 @@ static void keyCallback(int key, int scancode, int action, int mods) {
 
 int main() {
   setupWindow();
+
+  Camera camera = makeDefaultCamera();
+
   Renderer renderer = makeRenderer();
   windowPresenter.mouseButtonCallback = mouseButtonCallback;
   windowPresenter.scrollCallback = scrollCallback;
