@@ -7,8 +7,8 @@
 #include "setup.h"
 #include <glm/glm.hpp>
 
-#define SCR_WIDTH 1080.0
-#define SCR_HEIGHT 1080.0
+#define SCR_WIDTH 800.0
+#define SCR_HEIGHT 800.0
 #define UNIT_SIZE 0.025f
 
 using namespace glm;
