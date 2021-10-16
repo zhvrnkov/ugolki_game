@@ -3,15 +3,6 @@
 
 using namespace glm;
 
-Camera makeDefaultCamera() {
-  return Camera {
-    .up = vec3(0.0, 1.0, 0.0),
-    .direction = vec3(0.0, 0.0, -1.0),
-    .initialDirection = vec3(0.0, 0.0, -1.0),
-    .position = vec3(0.0, 0.0, 10.0)
-  };
-}
-
 mat4 translate(vec3 translation) {
   float x = translation.x;
   float y = translation.y;
@@ -57,18 +48,6 @@ mat4 rotate_x(mat4 src, float angle) {
 
 mat4 rotate_y(mat4 src, float angle) {
   return rotate(src, angle, vec3(0, 1, 0));
-}
-
-mat4 make_view(Camera *camera) {
-  vec3 dfp = normalize(camera->position - camera->direction);
-  vec3 newZ = dfp;
-  vec3 newX = normalize(cross(camera->up, newZ));
-  vec3 newY = normalize(cross(newZ, newX));
-  mat4 tr = mat4(1.0);
-  tr[0] = vec4(newX.x, newY.x, newZ.x, tr[0].w);
-  tr[1] = vec4(newX.y, newY.y, newZ.y, tr[1].w);
-  tr[2] = vec4(newX.z, newY.z, newZ.z, tr[2].w);
-  return tr * translate(-(camera->position));
 }
 
 mat4 make_projection(float w, float h, float n, float f) {

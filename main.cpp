@@ -23,15 +23,13 @@ static void keyCallback(int key, int scancode, int action, int mods) {
 int main() {
   setupWindow();
 
-  Camera camera = makeDefaultCamera();
-
   Renderer renderer = makeRenderer();
   windowPresenter.mouseButtonCallback = mouseButtonCallback;
   windowPresenter.scrollCallback = scrollCallback;
   windowPresenter.keyCallback = keyCallback;
 
   for (size_t i = 0; should_close(); i++) {
-    render(&renderer);
+    render(renderer);
   }
 
   glfwTerminate();
