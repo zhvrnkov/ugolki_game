@@ -2,7 +2,6 @@
 #include <cmath>
 #include "renderer/renderer.h"
 #include "renderer/camera/camera.h"
-#include "objects/objParser.h"
 
 using namespace glm;
 using namespace std;
