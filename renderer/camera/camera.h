@@ -25,7 +25,7 @@ struct Camera {
   Camera()
     : up(vec3(0.0, 1.0, 0.0))
     , direction(vec3(0.0, 0.0, -1.0))
-    , position(vec3(0.0, 1.0, 2.0))
+    , position(vec3(0.0, 1.5, 1.5))
     , initialDirection(this->direction) 
   {};
 

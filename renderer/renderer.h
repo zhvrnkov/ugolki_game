@@ -10,6 +10,7 @@
 #include <vector>
 #include "camera/camera.h"
 #include "../game.h"
+#include "light.h"
 
 #define SCR_WIDTH 960.0
 #define SCR_HEIGHT 960.0
@@ -22,11 +23,13 @@ struct Renderer {
 public:
   Program boardProgram;
   Program peaceProgram;
+  Program lightProgram;
   Mesh boardMesh;
   Mesh cubeMesh;
   Camera camera;
   mat4 projection;
   float time;
+  Light light;
 };
 
 typedef struct {
@@ -137,16 +140,31 @@ void setupWindow() {
 	glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
 }
 
+static Light makeLight() {
+  Light light = {
+    .position = vec3(1.0f, 1.0f, -5.0f),
+    .ambient = vec3(0.0f),
+    .diffuse = vec3(0.0f),
+    .specular = vec3(1.0f),
+    .color = vec3(1.0f)
+  };
+  return light;
+}
+
 Renderer makeRenderer() {
   Program peaceProgram = Program("./renderer/shaders/main.peace.vert", "./renderer/shaders/main.peace.frag");
   Program boardProgram = Program("./renderer/shaders/main.vert", "./renderer/shaders/main.frag");
+  Program lightProgram = Program("./renderer/shaders/main.lightning.vert", "./renderer/shaders/main.lightning.frag");
   Renderer output = {
     .boardProgram = boardProgram,
     .peaceProgram = peaceProgram,
+    .lightProgram = lightProgram,
     .boardMesh = Mesh(boardVertices),
     .cubeMesh = Mesh(cubeVertices),
     .camera = Camera(),
     .projection = make_projection_angle(45.0, 1, 0.1, 100),
+    .time = 0.0,
+    .light = makeLight()
   };
   return output;
 }
@@ -179,7 +197,7 @@ vec3 rotationVectors[] = {
 
 #include <glm/gtx/string_cast.hpp>
 
-mat4 model(Peace peace, ivec2 boardSize, vec3 rotationVector, float rotationAngle) {
+static mat4 model(Peace peace, ivec2 boardSize, vec3 rotationVector, float rotationAngle) {
   float scale = 0.1;
   float eps = 0.001;
 
@@ -192,14 +210,20 @@ mat4 model(Peace peace, ivec2 boardSize, vec3 rotationVector, float rotationAngl
   return r * trans * mat4(mat3(scale));
 }
 
+static void updateLight(Program program, Light light) {
+  program.setVec3("light.color", light.color);
+  program.setVec3("light.position", light.position);
+}
+
 void render(Renderer &renderer, Game &game) {
+  float angle = M_PI / 2.0f;
   renderer.time = glfwGetTime();
   // renderer.camera.position.x = 2.0 * cosf(renderer.time);
   // renderer.camera.position.z = 2.0 * sinf(renderer.time);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
   renderer.boardProgram.use();
-  renderer.boardProgram.setMat4("model", make_model(translations[0], rotationVectors[0], M_PI / 2.0f));
+  renderer.boardProgram.setMat4("model", make_model(translations[0], rotationVectors[0], angle));
   renderer.boardProgram.setMat4("view", renderer.camera.viewMatrix());
   renderer.boardProgram.setMat4("projection", renderer.projection);
   renderer.boardMesh.Draw(renderer.boardProgram);
@@ -207,14 +231,28 @@ void render(Renderer &renderer, Game &game) {
   renderer.peaceProgram.use();
   renderer.peaceProgram.setMat4("view", renderer.camera.viewMatrix());
   renderer.peaceProgram.setMat4("projection", renderer.projection);
+  renderer.peaceProgram.setVec3("viewPos", renderer.camera.position);
+  updateLight(renderer.peaceProgram, renderer.light);
+  renderer.peaceProgram.setVec3("objectColor", vec3(0.8f));
   for (int i = 0; i < game.board.whitePeaces.size(); i++) {
-    renderer.peaceProgram.setMat4("model", model(game.board.whitePeaces[i], game.board.size, -rotationVectors[0], M_PI / 2.0f));
+    renderer.peaceProgram.setMat4("model", model(game.board.whitePeaces[i], game.board.size, -rotationVectors[0], angle));
     renderer.cubeMesh.Draw(renderer.peaceProgram);
   }
+  renderer.peaceProgram.setVec3("objectColor", vec3(0.2f));
   for (int i = 0; i < game.board.blackPeaces.size(); i++) {
-    renderer.peaceProgram.setMat4("model", model(game.board.blackPeaces[i], game.board.size, -rotationVectors[0], M_PI / 2.0f));
+    renderer.peaceProgram.setMat4("model", model(game.board.blackPeaces[i], game.board.size, -rotationVectors[0], angle));
     renderer.cubeMesh.Draw(renderer.peaceProgram);
   }
+
+  renderer.lightProgram.use();
+  renderer.light.position.x = cosf(renderer.time);
+  renderer.light.position.y = (sinf(renderer.time) + 1.0f) / 2.0f;
+  renderer.light.position.z = sinf(renderer.time / 4) - 3.0;
+  renderer.lightProgram.setMat4("model", make_model(renderer.light.position, vec3(1.0f), 0.0f) * mat4(mat3(0.125f)));
+  renderer.lightProgram.setMat4("view", renderer.camera.viewMatrix());
+  renderer.lightProgram.setMat4("projection", renderer.projection);
+  updateLight(renderer.lightProgram, renderer.light);
+  renderer.cubeMesh.Draw(renderer.lightProgram);
 
   glfwSwapBuffers(window);
   glfwPollEvents();
