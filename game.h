@@ -2,24 +2,23 @@
 #define game_h
 
 #include <glm/glm.hpp>
-
-#define PEACES_COUNT 4 * 4
+#include <vector>
 
 using namespace glm;
 
-typedef struct {
+struct Peace {
   ivec2 position;
-} Peace;
+};
 
-typedef struct {
+struct Board {
   ivec2 size;
-  Peace whitePeaces[PEACES_COUNT];
-  Peace blackPeaces[PEACES_COUNT];
-} Board;
+  vector<Peace> whitePeaces;
+  vector<Peace> blackPeaces;
+};
 
-typedef struct {
+struct Game {
   Board board;
   bool isWhiteTurn;
-} Game;
+};
 
 #endif

@@ -9,6 +9,7 @@
 #include "mesh.h"
 #include <vector>
 #include "camera/camera.h"
+#include "../game.h"
 
 #define SCR_WIDTH 960.0
 #define SCR_HEIGHT 960.0
@@ -17,17 +18,15 @@
 using namespace glm;
 using namespace std;
 
-typedef struct {
-} RenderingContext;
-
 struct Renderer {
-  public:
-  Program mainProgram;
+public:
+  Program boardProgram;
+  Program peaceProgram;
   Mesh boardMesh;
   Mesh cubeMesh;
   Camera camera;
   mat4 projection;
-  RenderingContext context;
+  float time;
 };
 
 typedef struct {
@@ -46,48 +45,47 @@ static vector<Vertex> boardVertices {
 };
 
 static vector<Vertex> cubeVertices {
-  // positions          // normals           // texture coords
-  { .Position = vec3(-0.5f, -0.5f, -0.5f), .Normal = vec3( 0.0f,  0.0f, -1.0f) },
-  { .Position = vec3(0.5f, -0.5f, -0.5f), .Normal = vec3( 0.0f,  0.0f, -1.0f) },
-  { .Position = vec3(0.5f,  0.5f, -0.5f), .Normal = vec3( 0.0f,  0.0f, -1.0f) },
-  { .Position = vec3(0.5f,  0.5f, -0.5f), .Normal = vec3( 0.0f,  0.0f, -1.0f) },
-  { .Position = vec3(-0.5f,  0.5f, -0.5f), .Normal = vec3( 0.0f,  0.0f, -1.0f) },
-  { .Position = vec3(-0.5f, -0.5f, -0.5f), .Normal = vec3( 0.0f,  0.0f, -1.0f) },
+  { .Position = vec3(-1.0f, -1.0f, -1.0f), .Normal = vec3( 0.0f,  0.0f, -1.0f) },
+  { .Position = vec3(1.0f, -1.0f, -1.0f), .Normal = vec3( 0.0f,  0.0f, -1.0f) },
+  { .Position = vec3(1.0f,  1.0f, -1.0f), .Normal = vec3( 0.0f,  0.0f, -1.0f) },
+  { .Position = vec3(1.0f,  1.0f, -1.0f), .Normal = vec3( 0.0f,  0.0f, -1.0f) },
+  { .Position = vec3(-1.0f,  1.0f, -1.0f), .Normal = vec3( 0.0f,  0.0f, -1.0f) },
+  { .Position = vec3(-1.0f, -1.0f, -1.0f), .Normal = vec3( 0.0f,  0.0f, -1.0f) },
 
-  // { .Position = vec3(-0.5f, -0.5f,  0.5f), .Normal = vec3( 0.0f,  0.0f,  1.0f) },
-  // { .Position = vec3(0.5f, -0.5f,  0.5f), .Normal = vec3( 0.0f,  0.0f,  1.0f) },
-  // { .Position = vec3(0.5f,  0.5f,  0.5f), .Normal = vec3( 0.0f,  0.0f,  1.0f) },
-  // { .Position = vec3(0.5f,  0.5f,  0.5f), .Normal = vec3( 0.0f,  0.0f,  1.0f) },
-  // { .Position = vec3(-0.5f,  0.5f,  0.5f), .Normal = vec3( 0.0f,  0.0f,  1.0f) },
-  // { .Position = vec3(-0.5f, -0.5f,  0.5f), .Normal = vec3( 0.0f,  0.0f,  1.0f) },
+  { .Position = vec3(-1.0f, -1.0f,  1.0f), .Normal = vec3( 0.0f,  0.0f,  1.0f) },
+  { .Position = vec3(1.0f, -1.0f,  1.0f), .Normal = vec3( 0.0f,  0.0f,  1.0f) },
+  { .Position = vec3(1.0f,  1.0f,  1.0f), .Normal = vec3( 0.0f,  0.0f,  1.0f) },
+  { .Position = vec3(1.0f,  1.0f,  1.0f), .Normal = vec3( 0.0f,  0.0f,  1.0f) },
+  { .Position = vec3(-1.0f,  1.0f,  1.0f), .Normal = vec3( 0.0f,  0.0f,  1.0f) },
+  { .Position = vec3(-1.0f, -1.0f,  1.0f), .Normal = vec3( 0.0f,  0.0f,  1.0f) },
 
-  // { .Position = vec3(-0.5f,  0.5f,  0.5f), .Normal = vec3(-1.0f,  0.0f,  0.0f) },
-  // { .Position = vec3(-0.5f,  0.5f, -0.5f), .Normal = vec3(-1.0f,  0.0f,  0.0f) },
-  // { .Position = vec3(-0.5f, -0.5f, -0.5f), .Normal = vec3(-1.0f,  0.0f,  0.0f) },
-  // { .Position = vec3(-0.5f, -0.5f, -0.5f), .Normal = vec3(-1.0f,  0.0f,  0.0f) },
-  // { .Position = vec3(-0.5f, -0.5f,  0.5f), .Normal = vec3(-1.0f,  0.0f,  0.0f) },
-  // { .Position = vec3(-0.5f,  0.5f,  0.5f), .Normal = vec3(-1.0f,  0.0f,  0.0f) },
+  { .Position = vec3(-1.0f,  1.0f,  1.0f), .Normal = vec3(-1.0f,  0.0f,  0.0f) },
+  { .Position = vec3(-1.0f,  1.0f, -1.0f), .Normal = vec3(-1.0f,  0.0f,  0.0f) },
+  { .Position = vec3(-1.0f, -1.0f, -1.0f), .Normal = vec3(-1.0f,  0.0f,  0.0f) },
+  { .Position = vec3(-1.0f, -1.0f, -1.0f), .Normal = vec3(-1.0f,  0.0f,  0.0f) },
+  { .Position = vec3(-1.0f, -1.0f,  1.0f), .Normal = vec3(-1.0f,  0.0f,  0.0f) },
+  { .Position = vec3(-1.0f,  1.0f,  1.0f), .Normal = vec3(-1.0f,  0.0f,  0.0f) },
 
-  // { .Position = vec3(0.5f,  0.5f,  0.5f), .Normal = vec3( 1.0f,  0.0f,  0.0f) },
-  // { .Position = vec3(0.5f,  0.5f, -0.5f), .Normal = vec3( 1.0f,  0.0f,  0.0f) },
-  // { .Position = vec3(0.5f, -0.5f, -0.5f), .Normal = vec3( 1.0f,  0.0f,  0.0f) },
-  // { .Position = vec3(0.5f, -0.5f, -0.5f), .Normal = vec3( 1.0f,  0.0f,  0.0f) },
-  // { .Position = vec3(0.5f, -0.5f,  0.5f), .Normal = vec3( 1.0f,  0.0f,  0.0f) },
-  // { .Position = vec3(0.5f,  0.5f,  0.5f), .Normal = vec3( 1.0f,  0.0f,  0.0f) },
+  { .Position = vec3(1.0f,  1.0f,  1.0f), .Normal = vec3( 1.0f,  0.0f,  0.0f) },
+  { .Position = vec3(1.0f,  1.0f, -1.0f), .Normal = vec3( 1.0f,  0.0f,  0.0f) },
+  { .Position = vec3(1.0f, -1.0f, -1.0f), .Normal = vec3( 1.0f,  0.0f,  0.0f) },
+  { .Position = vec3(1.0f, -1.0f, -1.0f), .Normal = vec3( 1.0f,  0.0f,  0.0f) },
+  { .Position = vec3(1.0f, -1.0f,  1.0f), .Normal = vec3( 1.0f,  0.0f,  0.0f) },
+  { .Position = vec3(1.0f,  1.0f,  1.0f), .Normal = vec3( 1.0f,  0.0f,  0.0f) },
 
-  // { .Position = vec3(-0.5f, -0.5f, -0.5f), .Normal = vec3( 0.0f, -1.0f,  0.0f) },
-  // { .Position = vec3(0.5f, -0.5f, -0.5f), .Normal = vec3( 0.0f, -1.0f,  0.0f) },
-  // { .Position = vec3(0.5f, -0.5f,  0.5f), .Normal = vec3( 0.0f, -1.0f,  0.0f) },
-  // { .Position = vec3(0.5f, -0.5f,  0.5f), .Normal = vec3( 0.0f, -1.0f,  0.0f) },
-  // { .Position = vec3(-0.5f, -0.5f,  0.5f), .Normal = vec3( 0.0f, -1.0f,  0.0f) },
-  // { .Position = vec3(-0.5f, -0.5f, -0.5f), .Normal = vec3( 0.0f, -1.0f,  0.0f) },
+  { .Position = vec3(-1.0f, -1.0f, -1.0f), .Normal = vec3( 0.0f, -1.0f,  0.0f) },
+  { .Position = vec3(1.0f, -1.0f, -1.0f), .Normal = vec3( 0.0f, -1.0f,  0.0f) },
+  { .Position = vec3(1.0f, -1.0f,  1.0f), .Normal = vec3( 0.0f, -1.0f,  0.0f) },
+  { .Position = vec3(1.0f, -1.0f,  1.0f), .Normal = vec3( 0.0f, -1.0f,  0.0f) },
+  { .Position = vec3(-1.0f, -1.0f,  1.0f), .Normal = vec3( 0.0f, -1.0f,  0.0f) },
+  { .Position = vec3(-1.0f, -1.0f, -1.0f), .Normal = vec3( 0.0f, -1.0f,  0.0f) },
 
-  // { .Position = vec3(-0.5f,  0.5f, -0.5f), .Normal = vec3( 0.0f,  1.0f,  0.0f) },
-  // { .Position = vec3(0.5f,  0.5f, -0.5f), .Normal = vec3( 0.0f,  1.0f,  0.0f) },
-  // { .Position = vec3(0.5f,  0.5f,  0.5f), .Normal = vec3( 0.0f,  1.0f,  0.0f) },
-  // { .Position = vec3(0.5f,  0.5f,  0.5f), .Normal = vec3( 0.0f,  1.0f,  0.0f) },
-  // { .Position = vec3(-0.5f,  0.5f,  0.5f), .Normal = vec3( 0.0f,  1.0f,  0.0f) },
-  // { .Position = vec3(-0.5f,  0.5f, -0.5f), .Normal = vec3( 0.0f,  1.0f,  0.0f) },
+  { .Position = vec3(-1.0f,  1.0f, -1.0f), .Normal = vec3( 0.0f,  1.0f,  0.0f) },
+  { .Position = vec3(1.0f,  1.0f, -1.0f), .Normal = vec3( 0.0f,  1.0f,  0.0f) },
+  { .Position = vec3(1.0f,  1.0f,  1.0f), .Normal = vec3( 0.0f,  1.0f,  0.0f) },
+  { .Position = vec3(1.0f,  1.0f,  1.0f), .Normal = vec3( 0.0f,  1.0f,  0.0f) },
+  { .Position = vec3(-1.0f,  1.0f,  1.0f), .Normal = vec3( 0.0f,  1.0f,  0.0f) },
+  { .Position = vec3(-1.0f,  1.0f, -1.0f), .Normal = vec3( 0.0f,  1.0f,  0.0f) },
 };
 
 WindowPresenter windowPresenter;
@@ -130,7 +128,7 @@ void setupWindow() {
 	glewExperimental = 1;
   glewInit();
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable( GL_BLEND );
+  glEnable(GL_DEPTH_TEST);
 
   glfwSetMouseButtonCallback(window, mouse_button_callback);
   glfwSetScrollCallback(window, scroll_callback);
@@ -140,16 +138,15 @@ void setupWindow() {
 }
 
 Renderer makeRenderer() {
-  Program mainProgram = Program("./renderer/shaders/main.vert", "./renderer/shaders/main.frag");
-//  Program peaceProgram = Program("./renderer/shaders/main.vert", "./renderer/shaders/main.frag");
-  RenderingContext context;
+  Program peaceProgram = Program("./renderer/shaders/main.peace.vert", "./renderer/shaders/main.peace.frag");
+  Program boardProgram = Program("./renderer/shaders/main.vert", "./renderer/shaders/main.frag");
   Renderer output = {
-    .mainProgram = mainProgram,
+    .boardProgram = boardProgram,
+    .peaceProgram = peaceProgram,
     .boardMesh = Mesh(boardVertices),
     .cubeMesh = Mesh(cubeVertices),
     .camera = Camera(),
     .projection = make_projection_angle(45.0, 1, 0.1, 100),
-    .context = context
   };
   return output;
 }
@@ -180,14 +177,44 @@ vec3 rotationVectors[] = {
   vec3(1.0, 0.3, 0.5),
 };
 
-void render(Renderer &renderer) {
+#include <glm/gtx/string_cast.hpp>
+
+mat4 model(Peace peace, ivec2 boardSize, vec3 rotationVector, float rotationAngle) {
+  float scale = 0.1;
+  float eps = 0.001;
+
+  vec2 bs = vec2(boardSize);
+  vec2 pp = vec2(peace.position + 1) - (bs / 2.0f);
+  vec3 position = vec3(pp / (bs / 2.0f) - (vec2(1.0) / bs), scale + eps);
+  mat4 trans = translate(position);
+
+  mat4 r = rotate(mat4(1.0), rotationAngle, rotationVector);
+  return r * trans * mat4(mat3(scale));
+}
+
+void render(Renderer &renderer, Game &game) {
+  renderer.time = glfwGetTime();
+  // renderer.camera.position.x = 2.0 * cosf(renderer.time);
+  // renderer.camera.position.z = 2.0 * sinf(renderer.time);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-  renderer.mainProgram.setMat4("model", make_model(translations[0], rotationVectors[0], M_PI / 2));
-  renderer.mainProgram.setMat4("view", renderer.camera.viewMatrix());
-  renderer.mainProgram.setMat4("projection", renderer.projection);
+  renderer.boardProgram.use();
+  renderer.boardProgram.setMat4("model", make_model(translations[0], rotationVectors[0], M_PI / 2.0f));
+  renderer.boardProgram.setMat4("view", renderer.camera.viewMatrix());
+  renderer.boardProgram.setMat4("projection", renderer.projection);
+  renderer.boardMesh.Draw(renderer.boardProgram);
 
-  renderer.boardMesh.Draw(renderer.mainProgram);
+  renderer.peaceProgram.use();
+  renderer.peaceProgram.setMat4("view", renderer.camera.viewMatrix());
+  renderer.peaceProgram.setMat4("projection", renderer.projection);
+  for (int i = 0; i < game.board.whitePeaces.size(); i++) {
+    renderer.peaceProgram.setMat4("model", model(game.board.whitePeaces[i], game.board.size, -rotationVectors[0], M_PI / 2.0f));
+    renderer.cubeMesh.Draw(renderer.peaceProgram);
+  }
+  for (int i = 0; i < game.board.blackPeaces.size(); i++) {
+    renderer.peaceProgram.setMat4("model", model(game.board.blackPeaces[i], game.board.size, -rotationVectors[0], M_PI / 2.0f));
+    renderer.cubeMesh.Draw(renderer.peaceProgram);
+  }
 
   glfwSwapBuffers(window);
   glfwPollEvents();

@@ -25,12 +25,12 @@ struct Camera {
   Camera()
     : up(vec3(0.0, 1.0, 0.0))
     , direction(vec3(0.0, 0.0, -1.0))
-    , position(vec3(0.0, 1.0, 3.5))
+    , position(vec3(0.0, 1.0, 2.0))
     , initialDirection(this->direction) 
   {};
 
   mat4 viewMatrix() {
-    vec3 dfp = normalize(position - direction);
+    vec3 dfp = position;// normalize(position - direction);
     vec3 newZ = dfp;
     vec3 newX = normalize(cross(up, newZ));
     vec3 newY = normalize(cross(newZ, newX));

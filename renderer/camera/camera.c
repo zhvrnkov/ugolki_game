@@ -1,7 +1,9 @@
 #include "camera.h"
 #include <cmath>
+#include <iostream>
 
 using namespace glm;
+using namespace std;
 
 mat4 translate(vec3 translation) {
   float x = translation.x;
