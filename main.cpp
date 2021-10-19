@@ -6,12 +6,41 @@
 using namespace glm;
 using namespace std;
 
+static Renderer *rendererRef;
+
 static void scrollCallback(double xoffset, double yoffset) {
   cout << "scrollCallback" << endl;
 }
 
+#include <glm/gtx/string_cast.hpp>
+
+vec2 toScreen(vec4 src) {
+  vec3 homo = vec3(src.x, src.y, src.z) / src.w;
+  return vec2(homo.x + 1.0, homo.y - 1.0) * (vec2(SCR_WIDTH, -SCR_HEIGHT) / 2.0f);
+}
+
 static void mouseButtonCallback(double x, double y) {
-  cout << "Click in (x: " << x << ", y:" << y << ")" << endl;
+  float angle = M_PI / 2.0f;
+  mat4 model = make_model(translations[0], rotationVectors[0], angle);
+  mat4 view = rendererRef->camera.viewMatrix();
+  mat4 projection = rendererRef->projection;
+//  mat4 inv = inverse(projection * view * model);
+  float fx = x;
+  float fy = y;
+  mat4 t = projection * view * model;
+  vec4 tr = t * vec4(1.0f, 1.0f, 0.0f, 1.0f);
+  vec4 tl = t * vec4(1.0f, -1.0f, 0.0f, 1.0f);
+  vec4 br = t * vec4(-1.0f, 1.0f, 0.0f, 1.0f);
+  vec4 bl = t * vec4(-1.0f, -1.0f, 0.0f, 1.0f);
+  vec3 clickPos = inverse(mat3(t)) * vec3(x, y, 0.0f);
+
+  ivec2 sector = ivec2(floor((clickPos + 1.0f) * 4.0f));
+  
+  cout << "click: " << to_string(clickPos) << endl;
+  cout << "tr: " << to_string(toScreen(tr)) << endl;
+  cout << "tl: " << to_string(toScreen(tl)) << endl;
+  cout << "br: " << to_string(toScreen(br)) << endl;
+  cout << "bl: " << to_string(toScreen(bl)) << endl << endl;
 }
 
 static void keyCallback(int key, int scancode, int action, int mods) {
@@ -27,6 +56,7 @@ int main() {
 
   Game game = makeGame();
   Renderer renderer = makeRenderer();
+  rendererRef = &renderer;
   windowPresenter.mouseButtonCallback = mouseButtonCallback;
   windowPresenter.scrollCallback = scrollCallback;
   windowPresenter.keyCallback = keyCallback;

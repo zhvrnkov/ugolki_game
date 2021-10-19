@@ -106,6 +106,7 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
   double x, y;
   glfwGetCursorPos(window, &x, &y);
   if (windowPresenter.mouseButtonCallback != NULL) {
+    // windowPresenter.mouseButtonCallback(x, y);
     windowPresenter.mouseButtonCallback((x / (SCR_WIDTH / 2.0)) - 1.0,
                                         1.0 - (y / (SCR_HEIGHT / 2.0)));
   }
@@ -217,6 +218,7 @@ static void updateLight(Program program, Light light) {
 
 void render(Renderer &renderer, Game &game) {
   float angle = M_PI / 2.0f;
+//  angle = 0.0f;
   renderer.time = glfwGetTime();
   // renderer.camera.position.x = 2.0 * cosf(renderer.time);
   // renderer.camera.position.z = 2.0 * sinf(renderer.time);
