@@ -1,5 +1,5 @@
 GL_PKGS=glfw3 glew
-CFLAGS=-Wall -Wextra
+CFLAGS=-Wall -Wextra -framework OpenGL -std=c++17
 FILES=main.cpp renderer/camera/camera.c
 
 run: main.o
